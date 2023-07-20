@@ -1,0 +1,11 @@
+---
+# tasks file for promtail-config.yml
+
+# - name: Instalando pacotes necessários
+#   become: yes
+#   import_tasks: installation.yml
+
+- name: Importar as configraçoes promtail
+  become: yes
+  import_tasks: config-promtail.yml
+

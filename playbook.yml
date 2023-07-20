@@ -1,0 +1,4 @@
+- hosts: Promtail-server
+  become: yes
+  roles:
+    - promtail-config.yml

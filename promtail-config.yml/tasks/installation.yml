@@ -1,0 +1,8 @@
+- name: (1) instalação necessária
+  apt:
+    name:
+      - unzip
+      - software-properties-common
+      - wget
+      - apt-transport-https
+    state: present
