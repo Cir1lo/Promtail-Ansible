@@ -1,107 +1,106 @@
-# - name: (1) Importar o arquivo de execusao do promtail
-#   become: yes
-#   get_url:
-#     url: https://github.com/grafana/loki/releases/download/v2.8.2/promtail-linux-amd64.zip
-#     dest: /usr/local/bin/
-#     validate_certs: no
-
-# - name: (2) Descompactar o arquivo promtail
-#   become: yes
-#   unarchive:
-#     src: /usr/local/bin/promtail-linux-amd64.zip
-#     dest: /usr/local/bin/
-#     remote_src: yes
-
-# - name: (2.1) Remover o arquivoo Zip do promtail
-#   file:
-#     path: /usr/local/bin/promtail-linux-amd64.zip
-#     state: absent
-
-# - name: (3) Criar o arquivo de configuraçao do promtail
-#   copy:
-#     content: |
-#       server:
-#         http_listen_port: 9080
-#         grpc_listen_port: 0
-
-#       positions:
-#         filename: /tmp/positions.yaml
-
-#       clients:
-#         - url: http://192.168.122.138:3100/loki/api/v1/push
-
-#       scrape_configs:
-#         - job_name: syslog
-#           syslog:
-#             listen_address: 0.0.0.0:1514
-#             labels:
-#               job: syslog
-#           relabel_configs:
-#             - source_labels: [__syslog_message_hostname]
-#               target_label: host
-#             - source_labels: [__syslog_message_hostname]
-#               target_label: hostname
-#             - source_labels: [__syslog_message_severity]
-#               target_label: level
-#             - source_labels: [__syslog_message_app_name]
-#               target_label: application
-#             - source_labels: [__syslog_message_facility]
-#               target_label: facility
-#             - source_labels: [__syslog_connection_hostname]
-#               target_label: connection_hostname                                   
-#     dest: /usr/local/bin/promtail-local-config.yaml
-
-# - name: (4) Criando seviço para o promtail
-#   copy:
-#     content: |
-#       [Unit]
-#       Description=Promtail service
-#       After=network.target
-
-#       [Service]
-#       Type=simple
-#       User=root
-#       ExecStart=/usr/local/bin/promtail-linux-amd64 -config.file=/usr/local/bin/promtail-local-config.yaml
-
-#       [Install]
-#       WantedBy=multi-user.target
-#     dest: /etc/systemd/system/promtail.service
-
-# - name: (5) Recarregar o daemon do systemd
-#   systemd:
-#     daemon_reload: yes
-
-# - name: (6) Iniciar o serviço do Promtail
-#   systemd:
-#     name: promtail
-#     state: started
-#     enabled: yes
-
-- name: (7) Configurar o Arquivo Rsyslog
+- name: (1) Importar o arquivo de execusao do promtail
   become: yes
-  replace:
-    path: /etc/rsyslog.conf
-    regexp: "{{ item.regexp }}"
-    replace: "{{ item.replace }}"
-  with_items:
-  - { regexp: '#module(load="imudp")', replace: 'module(load="imudp")' }
-  - { regexp: '#input(type="imudp" port="514")', replace: 'input(type="imudp" port="514")' }
-  - { regexp: '#module(load="imtcp")', replace: 'module(load="imtcp")' }
-  - { regexp: '#input(type="imtcp" port="514")', replace: 'input(type="imtcp" port="514")' }
-  - { regexp: 'module(load="imklog" permitnonkernelfacility="on")', replace: 'module(load="imklog" permitnonkernelfacility="on")
+  get_url:
+    url: https://github.com/grafana/loki/releases/download/v2.8.2/promtail-linux-amd64.zip
+    dest: /usr/local/bin/
+    validate_certs: no
 
-# Forward everything
-*.*  action(type="omfwd"
-       protocol="tcp" target="127.0.0.1" port="1514"
-       Template="RSYSLOG_SyslogProtocol23Format"
-       TCP_Framing="octet-counted" KeepAlive="on"
-       action.resumeRetryCount="-1"
-       queue.type="linkedlist" queue.size="50000")' }
+- name: (2) Descompactar o arquivo promtail
+  become: yes
+  unarchive:
+    src: /usr/local/bin/promtail-linux-amd64.zip
+    dest: /usr/local/bin/
+    remote_src: yes
 
-- name: (8) Reiniciar o Rsyslog
+- name: (2.1) Remover o arquivoo Zip do promtail
+  file:
+    path: /usr/local/bin/promtail-linux-amd64.zip
+    state: absent
+
+- name: (3) Criar o arquivo de configuraçao do promtail
+  copy:
+    content: |
+      server:
+        http_listen_port: 9080
+        grpc_listen_port: 0
+
+      positions:
+        filename: /tmp/positions.yaml
+
+      clients:
+        - url: http://192.168.122.138:3100/loki/api/v1/push
+
+      scrape_configs:
+        - job_name: syslog
+          syslog:
+            listen_address: 0.0.0.0:1514
+            labels:
+              job: syslog
+          relabel_configs:
+            - source_labels: [__syslog_message_hostname]
+              target_label: host
+            - source_labels: [__syslog_message_hostname]
+              target_label: hostname
+            - source_labels: [__syslog_message_severity]
+              target_label: level
+            - source_labels: [__syslog_message_app_name]
+              target_label: application
+            - source_labels: [__syslog_message_facility]
+              target_label: facility
+            - source_labels: [__syslog_connection_hostname]
+              target_label: connection_hostname                                   
+    dest: /usr/local/bin/promtail-local-config.yaml
+
+- name: (4) Criando seviço para o promtail
+  copy:
+    content: |
+      [Unit]
+      Description=Promtail service
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/local/bin/promtail-linux-amd64 -config.file=/usr/local/bin/promtail-local-config.yaml
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/promtail.service
+
+- name: (5) Recarregar o daemon do systemd
   systemd:
-    name: rsyslog
+    daemon_reload: yes
+
+- name: (6) Iniciar o serviço do Promtail
+  systemd:
+    name: promtail
     state: started
     enabled: yes
 
-  
+# - name: (7) Configurar o Arquivo Rsyslog
+#   become: yes
+#   replace:
+#     path: /etc/rsyslog.conf
+#     regexp: "{{ item.regexp }}"
+#     replace: "{{ item.replace }}"
+#     backup: true
+#   with_items:
+#   - { regexp: '#module(load="imudp")', replace: module(load="imudp") }
+#   - { regexp: '#input(type="imudp" port="514")', replace: 'input(type="imudp" port="514")' }
+#   - { regexp: '#module(load="imtcp")', replace: 'module(load="imtcp")' }
+#   - { regexp: '#input(type="imtcp" port="514")', replace: 'input(type="imtcp" port="514")' }
+#   - { regexp: 'module(load="imklog" permitnonkernelfacility="on")', replace: 'module(load="imklog" permitnonkernelfacility="on")
+
+# # Forward everything
+# *.*  action(type="omfwd"
+#        protocol="tcp" target="127.0.0.1" port="1514"
+#        Template="RSYSLOG_SyslogProtocol23Format"
+#        TCP_Framing="octet-counted" KeepAlive="on"
+#        action.resumeRetryCount="-1"
+#        queue.type="linkedlist" queue.size="50000")' }
+
+# - name: (8) Reiniciar o Rsyslog
+#   systemd:
+#     name: rsyslog
+#     state: started
+#     enabled: yes
